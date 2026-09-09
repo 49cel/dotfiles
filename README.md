@@ -1,6 +1,6 @@
 # dotfiles
 
-Arch Linux + Hyprland (Caelestia) rice.
+custom arch + caelestia rice
 
 ## System
 
