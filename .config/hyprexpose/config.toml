@@ -1,0 +1,24 @@
+[appearance]
+font = "JetBrains Mono 11"
+label_font = "JetBrains Mono Bold 13"
+card_padding = 24.0
+card_radius = 12.0
+max_card_width  = 480.0
+max_card_height = 320.0
+label_height = 32.0
+thumb_padding = 8.0
+select_border = 3.0
+
+[colors]
+background = "#00000040"
+card = "#1a150a60"
+selection = "#8a6520a0"
+label = "#c4a862cc"
+empty_label = "#80808094"
+window_label = "#e0d0c0cc"
+active_window = "#8a6520a0"
+
+[behavior]
+no_preview = false
+switch_on_move = true
+allow_mouse = true

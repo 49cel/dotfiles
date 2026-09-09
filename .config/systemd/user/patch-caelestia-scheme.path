@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch Caelestia scheme files for changes
+
+[Path]
+PathChanged=/home/hua/.local/state/caelestia/scheme.json
+PathChanged=/home/hua/.config/hypr/scheme/current.lua
+
+[Install]
+WantedBy=default.target

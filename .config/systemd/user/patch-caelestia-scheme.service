@@ -1,0 +1,7 @@
+[Unit]
+Description=Patch Caelestia scheme tertiary colors to match primary
+
+[Service]
+Type=oneshot
+ExecStartPre=/usr/bin/sleep 0.3
+ExecStart=/home/hua/.local/bin/patch-caelestia-scheme

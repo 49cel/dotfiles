@@ -1,0 +1,7 @@
+*.zwc
+*.pyc
+__pycache__/
+.config/fish/fish_variables
+.config/nvim/lazy-lock.json
+.config/gtk-3.0/bookmarks
+.config/hyde/themes/*/wallpapers/

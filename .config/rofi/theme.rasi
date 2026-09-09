@@ -1,0 +1,41 @@
+* {
+    background-color: transparent;
+    text-color: #fef3e4;
+}
+
+window {
+    background-color: #17130b;
+    border: 2px solid;
+    border-color: #f9c03d;
+    border-radius: 12px;
+    width: 600px;
+}
+
+inputbar {
+    background-color: #342e25;
+    padding: 10px;
+    border-radius: 8px;
+    text-color: #fef3e4;
+}
+
+prompt, entry {
+    text-color: #fef3e4;
+}
+
+listview {
+    padding: 8px;
+}
+
+element {
+    padding: 8px;
+    border-radius: 6px;
+}
+
+element selected {
+    background-color: #daa520;
+    text-color: #000000;
+}
+
+element-icon {
+    size: 24px;
+}

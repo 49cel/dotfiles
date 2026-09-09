@@ -1,0 +1,223 @@
+#!/usr/bin/env python3
+import asyncio
+import json
+import os
+import socket
+import threading
+import time
+import evdev
+from evdev import ecodes, UInput
+
+SCROLL_COOLDOWN = 0.15
+PROXY_NAME = "scroll-workspace-proxy"
+
+super_held = False
+dragging = False
+last_switch = 0
+drag_total_dx = 0
+drag_total_dy = 0
+drag_start_wx = 0
+drag_start_wy = 0
+drag_dirty = False
+drag_lock = threading.Lock()
+mice_devices = []
+
+SCROLL_CODES = {ecodes.REL_WHEEL, ecodes.REL_HWHEEL}
+if hasattr(ecodes, 'REL_WHEEL_HI_RES'):
+    SCROLL_CODES.add(ecodes.REL_WHEEL_HI_RES)
+if hasattr(ecodes, 'REL_HWHEEL_HI_RES'):
+    SCROLL_CODES.add(ecodes.REL_HWHEEL_HI_RES)
+
+def get_hypr_socket():
+    sig = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+    for base in [f"/run/user/{os.getuid()}/hypr", "/tmp/hypr"]:
+        path = f"{base}/{sig}/.socket.sock"
+        if os.path.exists(path):
+            return path
+    return None
+
+SOCKET_PATH = get_hypr_socket()
+
+def hypr_cmd(cmd):
+    if not SOCKET_PATH:
+        return ""
+    try:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.settimeout(0.1)
+        sock.connect(SOCKET_PATH)
+        sock.send(cmd.encode())
+        resp = b""
+        while True:
+            chunk = sock.recv(8192)
+            if not chunk:
+                break
+            resp += chunk
+        sock.close()
+        return resp.decode()
+    except Exception:
+        return ""
+
+def hypr_fire(cmd):
+    if not SOCKET_PATH:
+        return
+    try:
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(SOCKET_PATH)
+        sock.send(cmd.encode())
+        sock.recv(64)
+        sock.close()
+    except Exception:
+        pass
+
+def find_devices():
+    keyboards = []
+    mice = []
+    for path in evdev.list_devices():
+        dev = evdev.InputDevice(path)
+        caps = dev.capabilities()
+        if ecodes.EV_REL in caps and ecodes.REL_WHEEL in caps[ecodes.EV_REL]:
+            if 'ydotool' not in dev.name.lower() and PROXY_NAME not in dev.name.lower():
+                mice.append(dev)
+        if ecodes.EV_KEY in caps and ecodes.KEY_LEFTMETA in caps[ecodes.EV_KEY]:
+            keyboards.append(dev)
+    return keyboards, mice
+
+def create_uinput(mice):
+    rel_caps = {ecodes.REL_X, ecodes.REL_Y}
+    key_caps = {ecodes.BTN_LEFT, ecodes.BTN_RIGHT, ecodes.BTN_MIDDLE, ecodes.BTN_SIDE, ecodes.BTN_EXTRA}
+    for dev in mice:
+        caps = dev.capabilities()
+        if ecodes.EV_REL in caps:
+            rel_caps.update(caps[ecodes.EV_REL])
+        if ecodes.EV_KEY in caps:
+            for k in caps[ecodes.EV_KEY]:
+                if isinstance(k, int):
+                    key_caps.add(k)
+    cap = {
+        ecodes.EV_REL: list(rel_caps),
+        ecodes.EV_KEY: list(key_caps),
+    }
+    return UInput(cap, name=PROXY_NAME)
+
+def switch_workspace(direction):
+    global last_switch
+    now = time.monotonic()
+    if now - last_switch < SCROLL_COOLDOWN:
+        return
+    last_switch = now
+    arg = "-1" if direction > 0 else "+1"
+    hypr_fire(f"/dispatch workspace {arg}")
+
+def drag_thread():
+    global drag_dirty
+    while True:
+        time.sleep(0.001)
+        if dragging and drag_dirty:
+            with drag_lock:
+                drag_dirty = False
+                tx = drag_start_wx + drag_total_dx
+                ty = drag_start_wy + drag_total_dy
+            hypr_fire(f"/dispatch moveactive exact {tx} {ty}")
+
+async def monitor_keyboard(dev):
+    global super_held, dragging
+    try:
+        async for event in dev.async_read_loop():
+            if event.type == ecodes.EV_KEY and event.code in (ecodes.KEY_LEFTMETA, ecodes.KEY_RIGHTMETA):
+                was_held = super_held
+                super_held = event.value > 0
+                if super_held and not was_held:
+                    for m in mice_devices:
+                        try:
+                            m.grab()
+                        except Exception:
+                            pass
+                elif not super_held and was_held:
+                    for m in mice_devices:
+                        try:
+                            m.ungrab()
+                        except Exception:
+                            pass
+                    dragging = False
+    except (OSError, PermissionError):
+        pass
+
+async def monitor_mouse(dev, ui):
+    global dragging, drag_total_dx, drag_total_dy, drag_start_wx, drag_start_wy, drag_dirty
+    try:
+        async for event in dev.async_read_loop():
+            if not super_held:
+                continue
+
+            if event.type == ecodes.EV_REL and event.code in SCROLL_CODES:
+                if event.code == ecodes.REL_WHEEL:
+                    switch_workspace(event.value)
+                continue
+
+            if event.type == ecodes.EV_KEY and event.code == ecodes.BTN_LEFT:
+                if event.value == 1:
+                    resp = hypr_cmd("/activewindow -j")
+                    try:
+                        win = json.loads(resp)
+                        if not win.get("floating"):
+                            hypr_cmd("/dispatch togglefloating")
+                            time.sleep(0.03)
+                            resp = hypr_cmd("/activewindow -j")
+                            win = json.loads(resp)
+                        pos = win.get("at", [0, 0])
+                        with drag_lock:
+                            drag_start_wx = pos[0]
+                            drag_start_wy = pos[1]
+                            drag_total_dx = 0
+                            drag_total_dy = 0
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+                    dragging = True
+                elif event.value == 0:
+                    dragging = False
+
+            if event.type == ecodes.EV_REL and dragging:
+                if event.code == ecodes.REL_X:
+                    with drag_lock:
+                        drag_total_dx += event.value
+                        drag_dirty = True
+                elif event.code == ecodes.REL_Y:
+                    with drag_lock:
+                        drag_total_dy += event.value
+                        drag_dirty = True
+
+            if event.type == ecodes.EV_SYN:
+                ui.syn()
+            else:
+                ui.write(event.type, event.code, event.value)
+    except (OSError, PermissionError):
+        pass
+
+async def main():
+    global mice_devices
+    keyboards, mice = find_devices()
+    if not keyboards or not mice:
+        print("Could not find keyboard or mouse devices")
+        return
+    mice_devices = mice
+
+    ui = create_uinput(mice)
+
+    for d in keyboards:
+        print(f"Keyboard: {d.name}", flush=True)
+    for d in mice:
+        print(f"Mouse: {d.name}", flush=True)
+    print(f"UInput: {ui.name}", flush=True)
+
+    t = threading.Thread(target=drag_thread, daemon=True)
+    t.start()
+
+    tasks = []
+    for kb in keyboards:
+        tasks.append(asyncio.create_task(monitor_keyboard(kb)))
+    for mouse in mice:
+        tasks.append(asyncio.create_task(monitor_mouse(mouse, ui)))
+    await asyncio.gather(*tasks)
+
+if __name__ == "__main__":
+    asyncio.run(main())

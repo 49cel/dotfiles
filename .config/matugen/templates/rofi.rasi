@@ -1,0 +1,41 @@
+* {
+    background-color: transparent;
+    text-color: {{colors.on_surface.default.hex}};
+}
+
+window {
+    background-color: {{colors.surface.default.hex}};
+    border: 2px solid;
+    border-color: {{colors.primary.default.hex}};
+    border-radius: 12px;
+    width: 600px;
+}
+
+inputbar {
+    background-color: {{colors.surface_container_high.default.hex}};
+    padding: 10px;
+    border-radius: 8px;
+    text-color: {{colors.on_surface.default.hex}};
+}
+
+prompt, entry {
+    text-color: {{colors.on_surface.default.hex}};
+}
+
+listview {
+    padding: 8px;
+}
+
+element {
+    padding: 8px;
+    border-radius: 6px;
+}
+
+element selected {
+    background-color: {{colors.primary_container.default.hex}};
+    text-color: {{colors.on_primary_container.default.hex}};
+}
+
+element-icon {
+    size: 24px;
+}

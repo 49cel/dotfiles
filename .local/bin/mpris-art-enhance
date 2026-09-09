@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CACHE_DIR="$HOME/.cache/mpris-hires-art"
+mkdir -p "$CACHE_DIR"
+
+artist="${1:-}"
+title="${2:-}"
+album="${3:-}"
+
+if [[ -z "$artist" || -z "$title" ]]; then
+    exit 1
+fi
+
+cache_key=$(echo -n "${artist}|${title}|${album}" | md5sum | cut -d' ' -f1)
+cache_file="$CACHE_DIR/${cache_key}.jpg"
+dur_file="$CACHE_DIR/${cache_key}.dur"
+
+have_art=false
+have_dur=false
+
+[[ -f "$cache_file" ]] && have_art=true
+[[ -f "$dur_file" ]] && have_dur=true
+
+if $have_art && $have_dur; then
+    echo "$cache_file"
+    cat "$dur_file"
+    exit 0
+fi
+
+query=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$artist $title" 2>/dev/null)
+if [[ -z "$query" ]]; then
+    $have_art && echo "$cache_file"
+    exit 0
+fi
+
+response=$(curl -4 -sSL --max-time 5 "https://itunes.apple.com/search?term=${query}&media=music&limit=5" 2>/dev/null) || {
+    $have_art && echo "$cache_file"
+    exit 0
+}
+
+read -r art_url duration < <(python3 -c "
+import json, sys
+data = json.loads(sys.argv[1])
+results = data.get('results', [])
+artist_lower = sys.argv[2].lower()
+title_lower = sys.argv[3].lower()
+
+best = None
+for r in results:
+    a = r.get('artistName', '').lower()
+    t = r.get('trackName', '').lower()
+    if artist_lower in a or a in artist_lower:
+        if title_lower in t or t in title_lower:
+            best = r
+            break
+if not best and results:
+    best = results[0]
+if best:
+    url = best.get('artworkUrl100', '')
+    dur_ms = best.get('trackTimeMillis', 0)
+    dur_s = dur_ms / 1000.0 if dur_ms else 0
+    print(url.replace('100x100bb', '600x600bb'), dur_s)
+else:
+    print('', 0)
+" "$response" "$artist" "$title" 2>/dev/null)
+
+if ! $have_dur && [[ -n "$duration" ]] && python3 -c "exit(0 if float('$duration') > 0 else 1)" 2>/dev/null; then
+    echo "$duration" > "$dur_file"
+    have_dur=true
+fi
+
+if $have_art; then
+    echo "$cache_file"
+    $have_dur && cat "$dur_file"
+    exit 0
+fi
+
+if [[ -z "$art_url" ]]; then
+    $have_dur && cat "$dur_file"
+    exit 1
+fi
+
+tmp_file=$(mktemp "$CACHE_DIR/.tmp.XXXXXX")
+if curl -4 -sSL --max-time 10 "$art_url" -o "$tmp_file" 2>/dev/null; then
+    file_size=$(stat -c%s "$tmp_file" 2>/dev/null || echo 0)
+    if [[ "$file_size" -gt 5000 ]]; then
+        mv "$tmp_file" "$cache_file"
+        echo "$cache_file"
+        $have_dur && cat "$dur_file"
+        exit 0
+    fi
+fi
+
+rm -f "$tmp_file"
+$have_dur && cat "$dur_file"
+exit 1

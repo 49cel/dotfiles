@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+"""Patch Caelestia scheme files so tertiary colors match primary (yellow, not green)."""
+
+import json
+import re
+import sys
+import time
+
+SCHEME_JSON = "/home/hua/.local/state/caelestia/scheme.json"
+CURRENT_LUA = "/home/hua/.config/hypr/scheme/current.lua"
+
+TERTIARY_TO_PRIMARY = [
+    ("primary", "tertiary"),
+    ("primaryDim", "tertiaryDim"),
+    ("onPrimary", "onTertiary"),
+    ("primaryContainer", "tertiaryContainer"),
+    ("onPrimaryContainer", "onTertiaryContainer"),
+    ("primaryFixed", "tertiaryFixed"),
+    ("primaryFixedDim", "tertiaryFixedDim"),
+    ("onPrimaryFixed", "onTertiaryFixed"),
+    ("onPrimaryFixedVariant", "onTertiaryFixedVariant"),
+    ("primaryPaletteKeyColor", "tertiaryPaletteKeyColor"),
+    ("primary_paletteKeyColor", "tertiary_paletteKeyColor"),
+]
+
+
+def patch_json():
+    try:
+        with open(SCHEME_JSON) as f:
+            d = json.load(f)
+        cols = d["colours"]
+        changed = False
+        for src, dst in TERTIARY_TO_PRIMARY:
+            if src in cols and dst in cols and cols[dst] != cols[src]:
+                cols[dst] = cols[src]
+                changed = True
+        if changed:
+            with open(SCHEME_JSON, "w") as f:
+                json.dump(d, f, indent=2)
+    except Exception:
+        pass
+
+
+def patch_lua():
+    try:
+        with open(CURRENT_LUA) as f:
+            text = f.read()
+
+        primary_vals = {}
+        for line in text.splitlines():
+            m = re.match(r'\s*(primary\w*)\s*=\s*"([0-9a-fA-F]+)"', line)
+            if m:
+                primary_vals[m.group(1)] = m.group(2)
+
+        changed = False
+        for src, dst in TERTIARY_TO_PRIMARY:
+            if src in primary_vals:
+                pat = re.compile(r'(\s*' + re.escape(dst) + r'\s*=\s*)"[0-9a-fA-F]+"')
+                new_text = pat.sub(r'\g<1>"' + primary_vals[src] + '"', text)
+                if new_text != text:
+                    text = new_text
+                    changed = True
+
+        if changed:
+            with open(CURRENT_LUA, "w") as f:
+                f.write(text)
+    except Exception:
+        pass
+
+
+if __name__ == "__main__":
+    patch_lua()
+    patch_json()

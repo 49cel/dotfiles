@@ -1,0 +1,9 @@
+
+[Default Applications]
+inode/directory=org.kde.dolphin.desktop
+x-scheme-handler/claude-cli=claude-code-url-handler.desktop
+video/mp4=mpv.desktop
+video/x-matroska=mpv.desktop
+video/webm=mpv.desktop
+x-scheme-handler/jetbrains=jetbrainsd.desktop
+x-scheme-handler/discord=vesktop.desktop

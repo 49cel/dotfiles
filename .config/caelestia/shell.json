@@ -1,0 +1,97 @@
+{
+    "appearance": {
+        "font": {
+            "body": {
+                "family": "JetBrains Mono"
+            },
+            "clock": "JetBrains Mono",
+            "headline": {
+                "family": "JetBrains Mono"
+            },
+            "label": {
+                "family": "JetBrains Mono"
+            },
+            "mono": {
+                "family": "JetBrains Mono"
+            },
+            "title": {
+                "family": "JetBrains Mono"
+            },
+            "workspaces": "JetBrains Mono"
+        },
+        "transparency": {
+            "base": 0.15,
+            "enabled": true,
+            "layers": 0.55
+        }
+    },
+    "bar": {
+        "activeWindow": {
+            "compact": false,
+            "inverted": false,
+            "showOnHover": true
+        },
+        "dragThreshold": 0,
+        "persistent": true,
+        "popouts": {
+            "activeWindow": false,
+            "tray": false
+        },
+        "scrollActions": {
+            "workspaces": true
+        },
+        "showOnHover": false,
+        "tray": {
+            "background": true,
+            "compact": false,
+            "recolour": true
+        },
+        "workspaces": {
+            "activeIndicator": true,
+            "activeTrail": true,
+            "label": "•",
+            "maxWindowIcons": 5,
+            "occupiedBg": false,
+            "perMonitorWorkspaces": true,
+            "showWindows": true,
+            "showWindowsOnSpecialWorkspaces": true,
+            "shown": 5
+        }
+    },
+    "border": {
+        "rounding": 0,
+        "thickness": 0
+    },
+    "dashboard": {
+        "dragThreshold": 45,
+        "enabled": true,
+        "performance": {
+            "showBattery": false
+        },
+        "showMedia": true
+    },
+    "general": {
+        "logo": ""
+    },
+    "launcher": {
+        "maxShown": 10,
+        "maxWallpapers": 15,
+        "showOnHover": false,
+        "useFuzzy": {
+            "apps": false
+        }
+    },
+    "services": {
+        "brightnessIncrement": 0.1,
+        "gpuType": "NVIDIA",
+        "maxVolume": 1,
+        "smartScheme": false,
+        "useFahrenheit": false,
+        "visualiserBars": 120,
+        "weatherLocation": "Sydney"
+    },
+    "sidebar": {
+        "dragThreshold": 0,
+        "enabled": true
+    }
+}

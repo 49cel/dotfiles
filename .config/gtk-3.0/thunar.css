@@ -1,0 +1,202 @@
+/* Thunar theme */
+
+/* =============================================================================
+   Global Resets
+   ============================================================================= */
+
+.thunar * {
+    outline: none;
+    border: none;
+}
+
+/* =============================================================================
+   Window & Background
+   ============================================================================= */
+
+.thunar.background {
+    background: #131313;
+}
+
+.thunar .titlebar {
+    background: inherit;
+}
+
+.thunar .titlebutton.close {
+    margin: 0 15px 0 0;
+}
+
+/* =============================================================================
+   Layout Containers
+   ============================================================================= */
+
+/* Paned separator between sidebar and main view */
+.thunar paned > separator {
+    min-width: 4px;
+    margin-right: -7px;
+    margin-left: -7px;
+    background: none;
+    background-image: none;
+    box-shadow: none;
+}
+
+
+/* Main file view frame */
+.thunar .frame.standard-view {
+    padding: 10px;
+    margin: 10px 15px 0 0;
+    border-radius: 15px;
+    background-color: #1b1b1b;
+    animation: fading 400ms ease forwards;
+    opacity: 0;
+    animation-delay: 250ms;
+}
+
+.thunar .frame.standard-view .view:not(.rubberband),
+.thunar .frame.standard-view .view *:not(.rubberband) {
+    background-color: transparent;
+}
+
+.thunar .frame.standard-view .view *:selected {
+    color: #ffffff;
+}
+
+.thunar .rubberband {
+    background-color: alpha(#ffffff, 0.15);
+    border: 1px solid alpha(#ffffff, 0.15);
+}
+
+
+/*  Tabs */
+.thunar header.top {
+    background: none;
+    padding: 0 10px 0 0;
+    margin: 3px 0 -3px -2px;
+}
+
+.thunar header.top tabs .reorderable-page {
+    margin: 0;
+    transition: all ease 300ms;
+}
+.thunar header.top tabs .reorderable-page + .reorderable-page {
+    margin: 0 0 0 10px;
+}
+
+.thunar header.top tabs .reorderable-page:hover {
+    background-color: alpha(#ffffff, 0.08);
+
+}
+.thunar header.top tabs .reorderable-page:checked {
+    color: #ffffff;
+    background-color: alpha(#ffffff, 0.15);
+
+}
+
+/* =============================================================================
+   Sidebar Navigation
+   ============================================================================= */
+
+.thunar .sidebar {
+    padding: 0 20px;
+    background: none;
+    animation: fading 600ms ease forwards;
+    animation-delay: 100ms;
+    opacity: 0;
+}
+
+.thunar .sidebar .view {
+    padding: 8px 4px;
+    border-radius: 10px;
+    background: none;
+    transition: all ease 300ms;
+}
+
+.thunar .sidebar .view:hover {
+    background: alpha(#e2e2e2, 0.1);
+}
+
+.thunar .sidebar .view:selected {
+    background: alpha(#ffffff, 0.15);
+    color: #ffffff;
+}
+
+/* =============================================================================
+   Path Bar & Location Buttons
+   ============================================================================= */
+
+.thunar .path-bar-button {
+    margin: 0;
+    padding: 8px 5px;
+    transition: all ease 0.4s;
+}
+
+.thunar .location-button.toggle:checked,
+.thunar .path-bar-button.toggle:checked {
+    padding: 8px 25px;
+    background: alpha(#ffffff, 0.15);
+    color: #ffffff;
+    box-shadow: none;
+}
+
+.thunar .location-button.path-bar-button:not(:checked) {
+    background-color: #1b1b1b;
+}
+
+.thunar .location-button.path-bar-button:not(:checked):hover {
+    background: alpha(#ffffff, 0.08);
+    color: alpha(#ffffff, 0.8);
+}
+
+.thunar .location-button.toggle+.location-button.toggle:checked {
+    margin-left: 0px;
+    padding: 0 25px;
+}
+
+.thunar .titlebar {
+    padding: 15px 0 5px 0;
+}
+
+/* =============================================================================
+   Buttons
+   ============================================================================= */
+
+.thunar button.toggle:checked {
+    color: #ffffff;
+}
+
+.thunar .image-button {
+    padding: 8px;
+    margin: 0 0 0 8px;
+    transition: all ease 0.4s;
+}
+
+/* =============================================================================
+   Status Bar
+   ============================================================================= */
+
+.thunar statusbar {
+    background-color: #1b1b1b;
+    border-radius: 15px;
+    padding: 10px 10px;
+    margin: 15px 5px 15px -10px;
+    color: #e2e2e2;
+}
+
+
+/* =============================================================================
+   Image preview
+   ============================================================================= */
+
+.thunar box.vertical .image {
+    margin: 15px;
+}
+
+
+/* =============================================================================
+   Animation
+   ============================================================================= */
+
+@keyframes fading {
+    to {
+        opacity: 1;
+    }
+}

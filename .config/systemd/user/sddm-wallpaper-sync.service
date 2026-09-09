@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync desktop wallpaper to SDDM theme
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/sddm-wallpaper-sync.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
